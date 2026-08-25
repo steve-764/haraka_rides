@@ -2,7 +2,6 @@
 -- ================================		Fleet_staging cleaning	================================================
 -- =============================================================================================================
 
-
 -- vehicle plate
 
 select distinct vehicle_plate, 
@@ -332,9 +331,29 @@ WHERE next_service_due LIKE '%-%'
   AND LENGTH(next_service_due) = 10
   AND SPLIT_PART(next_service_due,'-',1)::INTEGER <= 12; 
 
-
-
 -- =============================================================================================================
+-- viewing log id that appear more than once in the table
 
+select log_id,
+		count(*) as log_count
+from haraka.fleet_staging 
+group by log_id 
+having count(*) > 1;
 
+/* log_id 4, 21, 56, and 41 appear twice */
+/* confirming that the logs are replicated */ 
+
+select * from haraka.fleet_staging t 
+where log_id in ('4', '21', '41', '56')
+order by log_id ;
+
+/* removing the duplicates */
+
+delete from haraka.fleet_staging 
+where ctid not in 
+	(select min(ctid) from haraka.fleet_staging group by log_id);
+	
+	
+	
 select * from haraka.fleet_staging;
+
