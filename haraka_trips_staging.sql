@@ -421,6 +421,7 @@ WHERE trip_date LIKE '%-%'
 
 
 -- =============================================================================================================
+-- distance
 
 select distance_km from haraka.trip_staging ts
 where ts.distance_km like '-%';		-- selecting rows with a - prefix -- 15 rows
@@ -472,6 +473,16 @@ where ts.status != INITCAP(TRIM(status)); -- 164 rows
 update haraka.trip_staging ts 
 set status = INITCAP(TRIM(status))
 where ts.status != INITCAP(TRIM(status));
+
+-- standerdizing status
+
+update haraka.trip_staging ts 
+set status = case
+	when status in ('Complete') then 'Completed'
+	when status in ('No Show') then 'No-Show'
+	else status
+end;
+
 
 -- =============================================================================================================
 
