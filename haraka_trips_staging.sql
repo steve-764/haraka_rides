@@ -518,4 +518,28 @@ WHERE TRIM(customer_rating) NOT IN ('1','2','3','4','5','');
 
 -- =============================================================================================================
 
+/* chacking for duplicate trips  */
+
+select trip_id,
+		count(*) as trip_count
+from haraka.trip_staging
+group by trip_id 
+having count(*) > 1;
+
+/* trips 131, 46, 112, 11, 79 and 91 appear twice */
+/* confirming that the logs are replicated */ 
+
+select * from haraka.trip_staging t 
+where trip_id in ('11', '46', '79', '91', '112', '131')
+order by trip_id ;
+
+/* removing the duplicates */
+
+delete from haraka.trip_staging 
+where ctid not in 
+	(select min(ctid) from haraka.trip_staging group by trip_id);
+
+-- =============================================================================================================
+
+
 select * from haraka.trip_staging ts;
