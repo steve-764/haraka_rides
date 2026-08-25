@@ -439,7 +439,7 @@ where ts.distance_km like '-%';
 
 -- payment method
 
-select distinct payment_method  , 
+select distinct payment_method , 
 		count(*) as payment_count 
 from haraka.trip_staging
 group by payment_method ;
@@ -454,6 +454,15 @@ where ts.payment_method != INITCAP(TRIM(payment_method)); -- 157 rows
 update haraka.trip_staging ts 
 set payment_method = INITCAP(TRIM(payment_method))
 where ts.payment_method != INITCAP(TRIM(payment_method));
+
+-- standerdizing  payment method
+
+update haraka.trips t
+set payment_method = case
+	when payment_method in ('Mpesa') then 'M-Pesa'
+	else payment_method
+end;
+
 
 -- =============================================================================================================
 
