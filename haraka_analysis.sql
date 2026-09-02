@@ -242,25 +242,23 @@ S3. For each completed trip, is its fare higher than the average fare for that s
 This is a correlated subquery - the "average" is different depending on which row you're looking at.
 */
 
-with overall_avg_fare as (
-	select round(avg(fare_amount), 2) as overall_fare_avg
+with payment_avg_fare as (
+	select 
+			t.payment_method,
+			round(avg(fare_amount), 2) as payment_fare_avg
+			 /* card avg 704.99, cash avg 768.15, mpesa avg 672.59 */
 	from haraka.trips t 
-),
-car_avg_fare as(
-	select vehicle_id, 
-			round(avg(fare_amount), 2) as car_avg_fare
-	from haraka.trips t
-	group by t.vehicle_id 
+	group by payment_method	
 )
 select 
-		v.vehicle_plate,
-		caf.car_avg_fare
-from car_avg_fare caf
-cross join overall_avg_fare 
-join haraka.vehicles v 
-on caf.vehicle_id = v.vehicle_id 
-where car_avg_fare > overall_fare_avg 
-order by car_avg_fare desc;
+		t.trip_id,
+		t.payment_method,
+		t.fare_amount,
+		paf.payment_fare_avg 
+from haraka.trips t 
+join payment_avg_fare paf on t.payment_method  = paf.payment_method
+where t.fare_amount  > paf.payment_fare_avg 
+order by fare_amount desc ;
 
 
 -- =============================================================================================================
@@ -299,11 +297,13 @@ select
 		vmc.total_maintenance,
 		vfc.total_fuel + vmc.total_maintenance as total_vehicle_cost,
 		vtf.total_fare - (vfc.total_fuel + vmc.total_maintenance) as vehicle_net_profit,
-		RANK () over ( order by (vtf.total_fare - (vfc.total_fuel + vmc.total_maintenance)) desc) as Profitability_rank
+		RANK() over (order by (vtf.total_fare - (vfc.total_fuel + vmc.total_maintenance)) desc) as Profitability_rank
 from vehicle_total_fare vtf
 join vehicle_fuel_cost vfc on vtf.vehicle_id = vfc.vehicle_id 
 join vehicle_maintenance_cost vmc on vtf.vehicle_id = vmc.vehicle_id
 join haraka.vehicles v on vtf.vehicle_id = v.vehicle_id ;
+
+
 
 
 
